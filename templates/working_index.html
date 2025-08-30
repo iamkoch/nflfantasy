@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Working Fantasy Draft Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .container { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+        .panel { background: #2a2a2a; padding: 20px; border-radius: 10px; }
+        .panel h3 { color: #4CAF50; margin-top: 0; }
+        .player-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; margin: 5px 0; background: #3a3a3a; border-radius: 5px;
+        }
+        .player-item:hover { background: #4a4a4a; }
+        .your-turn { background: rgba(76, 175, 80, 0.3); border: 2px solid #4CAF50; }
+        .draft-btn { 
+            background: #4CAF50; color: white; border: none; 
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; 
+        }
+        .draft-btn:hover { background: #45a049; }
+        .team-dropdown { 
+            background: #3a3a3a; color: white; border: 1px solid #555; 
+            padding: 5px; border-radius: 3px; 
+        }
+        select { background: #3a3a3a; color: white; border: 1px solid #555; padding: 5px; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .needs { background: #4a2a2a; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏈 Fantasy Draft Assistant</h1>
+        <p><strong>Pick <span id="current-pick">1</span></strong> • Round <span id="current-round">1</span></p>
+        <p><strong>On the Clock:</strong> <span id="current-team">Fudge Bay Packers</span></p>
+        <div id="your-turn-status"></div>
+    </div>
+    
+    <div id="message-area"></div>
+    
+    <div class="container">
+        <div class="panel">
+            <h3>🎯 Available Players 
+                <select id="position-filter" onchange="loadPlayers()">
+                    <option value="ALL">All</option>
+                    <option value="QB">QB</option>
+                    <option value="RB">RB</option>
+                    <option value="WR">WR</option>
+                    <option value="TE">TE</option>
+                    <option value="K">K</option>
+                    <option value="DST">DEF</option>
+                </select>
+            </h3>
+            <div id="players-list" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+        
+        <div class="panel">
+            <h3>👑 Your Team</h3>
+            <div id="your-team"></div>
+            <div id="needs" class="needs"></div>
+        </div>
+        
+        <div class="panel">
+            <h3>💡 Recommendations</h3>
+            <div id="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        let draftState = {};
+        
+        function showMessage(msg, type = 'success') {
+            const area = document.getElementById('message-area');
+            area.innerHTML = `<div class="message ${type}">${msg}</div>`;
+            setTimeout(() => area.innerHTML = '', 3000);
+        }
+        
+        function draftPlayer(playerName, teamName = null) {
+            const team = teamName || draftState.current_team;
+            if (confirm(`Draft ${playerName} to ${team}?`)) {
+                fetch('/api/draft_player', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({player_name: playerName, team_name: teamName})
+                })
+                .then(r => r.json())
+                .then(data => {
+                    showMessage(data.message, data.success ? 'success' : 'error');
+                    if (data.success) loadAll();
+                });
+            }
+        }
+        
+        function loadDraftState() {
+            fetch('/api/draft_state')
+            .then(r => r.json())
+            .then(data => {
+                draftState = data;
+                document.getElementById('current-pick').textContent = data.current_pick;
+                document.getElementById('current-round').textContent = data.current_round;
+                document.getElementById('current-team').textContent = data.current_team;
+                
+                const statusEl = document.getElementById('your-turn-status');
+                if (data.your_turn) {
+                    statusEl.innerHTML = '<div class="your-turn">🎯 YOUR TURN!</div>';
+                } else {
+                    statusEl.innerHTML = '<div>Wait for your turn...</div>';
+                }
+                
+                // Your team
+                const teamEl = document.getElementById('your-team');
+                teamEl.innerHTML = data.your_roster.map(p => `
+                    <div class="player-item">
+                        <div>
+                            <strong>${p.name}</strong><br>
+                            ${p.position} - ${p.team} • Proj: ${p.projected_points ? p.projected_points.toFixed(1) : '--'}
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Needs
+                const needsList = Object.entries(data.your_needs)
+                    .filter(([pos, count]) => count > 0)
+                    .map(([pos, count]) => `${pos}: ${count}`)
+                    .join(', ');
+                document.getElementById('needs').innerHTML = needsList ? 
+                    `<strong>Still need:</strong> ${needsList}` : 
+                    '<strong>Roster complete!</strong>';
+            });
+        }
+        
+        function loadPlayers() {
+            const position = document.getElementById('position-filter').value;
+            fetch(`/api/players?position=${position}&limit=30`)
+            .then(r => r.json())
+            .then(players => {
+                const listEl = document.getElementById('players-list');
+                listEl.innerHTML = players.map(p => `
+                    <div class="player-item">
+                        <div>
+                            <strong>${p.name}</strong><br>
+                            ${p.position} - ${p.team} • ADP: ${p.adp < 999 ? p.adp.toFixed(1) : '---'} • Proj: ${p.projected_points ? p.projected_points.toFixed(1) : '--'}
+                        </div>
+                        <div>
+                            ${draftState.your_turn ? 
+                                `<button class="draft-btn" onclick="draftPlayer('${p.name}')">Draft</button>` :
+                                `<select class="team-dropdown" onchange="if(this.value) { draftPlayer('${p.name}', this.value); this.value=''; }">
+                                    <option value="">Draft to...</option>
+                                    ${draftState.teams ? draftState.teams.map(t => 
+                                        `<option value="${t}">${t.substring(0, 20)}</option>`
+                                    ).join('') : ''}
+                                </select>`
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+        
+        function loadRecommendations() {
+            fetch('/api/recommendations')
+            .then(r => r.json())
+            .then(recs => {
+                document.getElementById('recommendations').innerHTML = recs.map(rec => `
+                    <div class="player-item">
+                        <div>
+                            <strong>${rec.player.name}</strong><br>
+                            ${rec.player.position} - ${rec.player.team}<br>
+                            <em>${rec.reason}</em>
+                        </div>
+                        <button class="draft-btn" onclick="draftPlayer('${rec.player.name}')">Draft</button>
+                    </div>
+                `).join('');
+            });
+        }
+        
+        function loadAll() {
+            loadDraftState();
+            loadPlayers();
+            loadRecommendations();
+        }
+        
+        // Initial load and auto-refresh
+        loadAll();
+        setInterval(loadAll, 10000);
+    </script>
+</body>
+</html>
