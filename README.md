@@ -1,65 +1,44 @@
-# NFL Fantasy Draft Assistant 2025-2026
+# NFL Fantasy Draft Application 2025-2026
 
-A comprehensive draft assistant for **The League** - your 8-team, 0.5 PPR fantasy football league.
+A comprehensive web-based fantasy football draft application with real-time ESPN API integration, mock drafts, and advanced analytics.
 
-## 📊 League Settings
-- **Teams:** 8
-- **Scoring:** 0.5 PPR  
-- **Starting Lineup:** 2 QB, 3 RB, 3 WR, 1 TE, 3 FLEX, 1 K, 2 DEF, 9 Bench
-- **Draft:** Friday, Aug 29, 2025 3:30pm EDT
+## 📊 Features
+- **Real-time ESPN League Integration** - Sync with your actual ESPN league
+- **Mock Draft Simulator** - Practice with AI-driven opponents
+- **Advanced Player Analytics** - Comprehensive scoring and ranking system
+- **Live Draft Board** - Real-time draft tracking with team analysis
+- **Export Functionality** - Save draft results and analysis
+- **Responsive Design** - Works on desktop and mobile
 
 ## 🗄️ Database
-Built from your "Cheat Sheet (Full) 25-26.xlsx" with 357 players including:
+Built from "Cheat Sheet (Full) 25-26.xlsx" with 357 players including:
 - Player rankings and ADP
 - Projected points
 - Team assignments
-- Position depth
+- Position depth analysis
+- Advanced metrics and scoring
 
 ## 🚀 How to Use
 
-### 1. Web Interface (Recommended for Draft Day)
+### Start the Application
 ```bash
-python web_draft_assistant.py
+python final_draft_app.py
 ```
 Then open http://localhost:5000 in your browser
 
-**Features:**
-- Live draft board with available players
-- Track your team and remaining position needs
-- Smart recommendations based on your roster
-- One-click drafting
-- Auto-refresh during draft
+### Main Features:
+1. **ESPN League Integration** - Connect to your live ESPN league
+2. **Mock Draft Mode** - Practice drafting against AI opponents
+3. **Player Database** - Browse and analyze all available players
+4. **Draft Analytics** - Real-time team analysis and recommendations
+5. **Export Tools** - Save your draft results and team analysis
 
-### 2. Interactive Command Line
-```bash
-python draft_assistant.py
-```
-
-**Commands during draft:**
-- `draft <player_name>` - Draft a player to your team
-- `skip` - Skip a pick (another team drafted)  
-- `search <name>` - Search for specific players
-- `pos <QB|RB|WR|TE|K|DST>` - Show players by position
-- `quit` - Exit
-
-### 3. Quick Reference Tool
-```bash
-# Show overview and top players
-python quick_draft.py
-
-# Show top players by position
-python quick_draft.py qb
-python quick_draft.py rb 20  # Show top 20 RBs
-
-# Search for specific players
-python quick_draft.py search "Christian McCaffrey"
-
-# Show sleeper picks
-python quick_draft.py sleepers
-
-# League settings and position scarcity
-python quick_draft.py league
-```
+### Draft Interface:
+- View available players sorted by value and position
+- See real-time team composition and needs analysis
+- Get intelligent draft recommendations
+- Track all teams' rosters and remaining picks
+- Export final results with detailed analytics
 
 ## 📈 Key Insights from Your Data
 
@@ -82,19 +61,19 @@ python quick_draft.py league
 - **TE:** 47 available (need 8 total) - Very top-heavy
 - **DEF:** 30 available (need 16 total) - Limited quality options
 
-## 📁 Files Created
+## 📁 Key Files
+- `final_draft_app.py` - Main Flask application with full functionality
 - `fantasy_draft_2025.db` - SQLite database with all player data
-- `web_draft_assistant.py` - Web interface for draft day
-- `draft_assistant.py` - Interactive command-line assistant  
-- `quick_draft.py` - Quick reference tool
+- `templates/final_index.html` - Modern responsive web interface
 - `parse_cheat_sheet.py` - Data extraction from Excel
-- `create_draft_db.py` - Database setup
+- `create_draft_db.py` - Database setup and initialization
+- `quick_draft.py` - Command-line reference tool
 
-## 🎯 Draft Day Tips
-1. **Start the web interface** before draft begins
-2. **Focus on your positional needs** (highlighted in red)
-3. **Use recommendations** - they factor in your roster gaps
-4. **Don't forget 2 QBs and 2 DEFs** - unique to your league
-5. **Target value picks** from the sleepers list
+## 🎯 Draft Tips
+1. **Use Mock Draft Mode** to practice before your real draft
+2. **Connect ESPN League** for live draft tracking
+3. **Monitor team analysis** - system shows positional needs
+4. **Follow recommendations** - based on value and roster composition
+5. **Export results** after draft for league analysis
 
 Good luck with your draft! 🏆
